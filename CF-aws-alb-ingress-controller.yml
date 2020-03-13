@@ -18,7 +18,7 @@ Metadata:
         Parameters:
           - KubeClusterName
           - KubeConfigPath
-          - KubeGetLambdaArn
+#          - KubeGetLambdaArn
           - KubeConfigKmsContext
           - HelmLambdaArn
           - Namespace
@@ -39,9 +39,9 @@ Metadata:
         default: EKS Kube Cluster Name
       KubeConfigPath:
         default: Kube Config Path
-      KubeGetLambdaArn:
-        default: Kube Get Lambda ARN
-        KubeConfigKmsContext:
+#      KubeGetLambdaArn:
+#        default: Kube Get Lambda ARN
+      KubeConfigKmsContext:
         default: Kube KMS Context
       HelmLambdaArn:
         default: EKS Stack HelmLambda ARN
