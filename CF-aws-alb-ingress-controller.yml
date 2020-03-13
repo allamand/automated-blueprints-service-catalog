@@ -11,14 +11,12 @@ Metadata:
           - notUsed
           - autoDiscoverAwsRegion
           - autoDiscoverAwsVpcID
-          - albRoleArn
           - KubeOIDCProvider
       - Label:
           default: Kube Cluster
         Parameters:
           - KubeClusterName
           - KubeConfigPath
-#          - KubeGetLambdaArn
           - KubeConfigKmsContext
           - HelmLambdaArn
           - Namespace
@@ -39,8 +37,6 @@ Metadata:
         default: EKS Kube Cluster Name
       KubeConfigPath:
         default: Kube Config Path
-#      KubeGetLambdaArn:
-#        default: Kube Get Lambda ARN
       KubeConfigKmsContext:
         default: Kube KMS Context
       HelmLambdaArn:
@@ -73,9 +69,6 @@ Parameters:
     Default: true
     Description: 'auto discover awsVpcID from ec2metadata, omit awsRegion when this set to true'
     Type: String
-   albRoleArn:
-    Description: 'IAM Role Arn to uses for alb-ingress-controller pods'
-    Type: String
    KubeOIDCProvider:
     Description: 'Get the oidc provider from your EKS configuration'
     Type: String
@@ -86,9 +79,6 @@ Parameters:
     Description: 'Get this from the EKSStack outputs section in CloudFormation.'
     Type: String
    KubeConfigPath:
-    Description: 'Get this from the EKSStack outputs section in CloudFormation.'
-    Type: String
-   KubeGetLambdaArn:
     Description: 'Get this from the EKSStack outputs section in CloudFormation.'
     Type: String
    KubeConfigKmsContext:
@@ -251,7 +241,7 @@ Resources:
         clusterName: !Ref KubeClusterName
         autoDiscoverAwsRegion: !Ref autoDiscoverAwsRegion
         autoDiscoverAwsVpcID: !Ref autoDiscoverAwsVpcID
-        rbac.serviceAccountAnnotations."eks\.amazonaws\.com/role-arn": !Ref albRoleArn
+        rbac.serviceAccountAnnotations."eks\.amazonaws\.com/role-arn": !Ref ALBRole
 
 
 #  WPElbHostName:
