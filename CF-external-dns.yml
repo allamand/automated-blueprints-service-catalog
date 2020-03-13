@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This Cloudformation template shows you how to use Cloudformation to deploy
+  The AWS External DNS Controller into the "Amazon EKS QuickStart"
+  which is a pre-requisit. "https://docs.aws.amazon.com/quickstart/latest/amazon-eks-architecture/welcome.html" **WARNING** You will be billed for the AWS resources used if you create a stack from this template.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: ExternalDNS
+        Parameters:
+          - domainFilters
+          - externalDNSRoleArn
+          - externalDNSPolicy
+      - Label:
+          default: Kube Cluster
+        Parameters:
+          - KubeClusterName
+          - KubeConfigPath
+          - KubeGetLambdaArn
+          - KubeConfigKmsContext
+          - HelmLambdaArn
+          - Namespace
+          - Name
+          - RepoUrl
+    ParameterLabels:
+      domainFilters:
+        default: Domain to filter with external DNS
+      ernalDNSRoleArn:
+        default: ARN for IAM Role
+      externalDNSPolicy:
+        default : ExternalDNS synchro policy
+      KubeClusterName:
+        default: EKS Kube Cluster Name
+      KubeConfigPath:
+        default: Kube Config Path
+      KubeGetLambdaArn:
+        default: Kube Get Lambda ARN
+      KubeConfigKmsContext:
+        default: Kube KMS Context
+      HelmLambdaArn:
+        default: EKS Stack HelmLambda ARN
+      Namespace:
+        default: Kube Namespace for this function
+      Name:
+        default: Kube Name for this function
+      RepoUrl:
+        degault: Helm repo to uses
+Parameters:
+   domainFilters:
+     Description: 'ex: sub.mydomain.com'
+     Type: String
+   externalDNSRoleArn:
+    Description: 'IAM Role Arn to uses for external-dns pods'
+    Type: String
+   externalDNSPolicy:
+     Description: '(options: sync, upsert-only)'
+     Type: String
+     Default: "sync"
+   HelmLambdaArn:
+    Description: 'Get this from the EKSStack outputs section in CloudFormation.'
+    Type: String
+   KubeClusterName:
+    Description: 'Get this from the EKSStack outputs section in CloudFormation.'
+    Type: String
+   KubeConfigPath:
+    Description: 'Get this from the EKSStack outputs section in CloudFormation.'
+    Type: String
+   KubeConfigKmsContext:
+    Description: 'This is using the default from the AWS EKS Quick Start, if you modified
+    this context when deploying. You need to use the modified KMS context here.'
+    Type: String
+    Default: "EKSQuickStart"
+   Namespace:
+    Description: 'Modify to use a custom Namespace. The Namespace up to 63 characters
+    long. The characters allowed in names are: digits (0-9), lower case letters (a-z),
+    and underscore(s)(cannot start or end with)'
+    Type: String
+    Default: "kube-system"
+   Name:
+    Description: 'Modify to use a custom Names. The Names up to 253 characters
+    long. The characters allowed in names are: digits (0-9), lower case letters (a-z), -,
+    and ..'
+    Type: String
+    Default: "external-dns"
+   RepoUrl:
+    Description: 'Modify to use a other helm repo than stable'
+    Type: String
+    Default: "https://kubernetes-charts.storage.googleapis.com"
+Resources:
+  ExternalDNSHelmChart:
+    Type: "Custom::Helm"
+    Version: '1.0'
+    Properties:
+      ServiceToken: !Ref HelmLambdaArn
+      KubeConfigPath: !Ref KubeConfigPath
+      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      KubeClusterName: !Ref KubeClusterName
+      Namespace: !Ref Namespace
+      Chart: stable/external-dns
+      Name: !Ref Name
+      RepoUrl: !Ref RepoUrl
+      Values:
+        clusterName: !Ref KubeClusterName
+        domainFilters[0]: !Ref domainFilters
+        rbac.serviceAccountAnnotations."eks\.amazonaws\.com/role-arn": !Ref externalDNSRoleArn
+        txt-owner-id: !Ref KubeClusterName
+        policy: !Ref externalDNSPolicy
+#  WPElbHostName:
+#    DependsOn: HelmExample
+#    Type: "Custom::KubeGet"
+#    Version: '1.0'
+#    Properties:
+#     ServiceToken: !Ref KubeGetLambdaArn
+#     KubeConfigPath: !Ref KubeConfigPath
+#     KubeConfigKmsContext: !Ref KubeConfigKmsContext
+#     Namespace: !Ref Namespace
+#     Name: !Sub 'service/${Name}-wordpress'
+#     JsonPath: '{.status.loadBalancer.ingress[0].hostname}'
+
+Outputs:
+  ExternalDNSReleaseName:
+    Value: !Ref ExternalDNSHelmChart
+#    WPElbHostName:
+#      Value: !Ref WPElbHostName
