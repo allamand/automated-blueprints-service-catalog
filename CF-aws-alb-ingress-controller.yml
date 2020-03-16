@@ -70,7 +70,7 @@ Parameters:
     Description: 'auto discover awsVpcID from ec2metadata, omit awsRegion when this set to true'
     Type: String
    KubeOIDCProvider:
-    Description: 'Get the oidc provider from your EKS configuration'
+    Description: 'Get the oidc provider from your EKS configuration without https: ex: oidc.eks.us-east-1.amazonaws.com/id/17B548BB618492173CE72DB7BF83E921'
     Type: String
    HelmLambdaArn:
     Description: 'Get this from the EKSStack outputs section in CloudFormation.'
@@ -213,13 +213,16 @@ Resources:
               - 'sts:AssumeRoleWithWebIdentity'
             Condition:
               StringEquals:
-                '!Ref KubeOIDCProvider:aud': sts.amazonaws.com
-                '!Ref KubeOIDCProvider:sub': >-
-                  system:serviceaccount:kube-system:alb-ingress-controller
+                Fn::Sub: 
+                  - '${KubeOIDCProvider}:aud': sts.amazonaws.com
+#                  - { KubeOIDCProvider: !Ref KubeOIDCProvider }
+                Fn::Sub:
+                  - '${KubeOIDCProvider}:sub': system:serviceaccount:kube-system:alb-ingress-controller
             Effect: Allow
             Principal:
-              Federated: >-
-                !Ref KubeOIDCProvider
+              Federated:
+                Fn::Sub: 
+                  - 'arn:aws:iam::${AWS::AccountId}:oidc-provider/${KubeOIDCProvider}'
         Version: 2012-10-17
       ManagedPolicyArns:
         - !Ref ALBPolicy
